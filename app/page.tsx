@@ -3,6 +3,7 @@ import MarketOverview from '@/components/MarketOverview'
 import AIForecastPanel from '@/components/AIForecastPanel'
 import MoversSignals from '@/components/MoversSignals'
 import NewsSentiment from '@/components/NewsSentiment'
+import LongTermForecast from '@/components/LongTermForecast'
 
 export default function DashboardPage() {
   return (
@@ -16,10 +17,15 @@ export default function DashboardPage() {
           <AIForecastPanel />
         </div>
 
-        {/* Bottom row: Movers + News */}
+        {/* Middle row: Movers + News */}
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-4 h-auto xl:h-[500px]">
           <MoversSignals />
           <NewsSentiment />
+        </div>
+
+        {/* Bottom row: Long-term forecasts (full width) */}
+        <div className="h-auto xl:h-[580px]">
+          <LongTermForecast />
         </div>
       </main>
 

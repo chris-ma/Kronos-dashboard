@@ -203,6 +203,146 @@ export const scenarios: ScenarioItem[] = [
   { label: 'Bear Case', probability: 18, description: 'Macro headwinds trigger selloff below 5,000 support.', color: '#ef4444' },
 ]
 
+// ── Long-Term Forecast ────────────────────────────────────────────────────────
+export type Timeframe = '3M' | '6M' | '1Y' | '3Y' | '5Y'
+
+export interface LongTermPoint {
+  time: string
+  actual: number | null
+  forecast: number
+  upper: number
+  lower: number
+}
+
+export interface LongTermSummary {
+  period: Timeframe
+  label: string
+  targetPrice: number
+  returnPct: number
+  confidence: number
+  signal: 'BULLISH' | 'BEARISH' | 'NEUTRAL'
+}
+
+interface TFConfig {
+  totalMonths: number
+  intervalDays: number
+  annualDrift: number
+  endSpreadFraction: number
+}
+
+const TF_CONFIG: Record<Timeframe, TFConfig> = {
+  '3M': { totalMonths: 3,  intervalDays: 7,   annualDrift: 0.09, endSpreadFraction: 0.06 },
+  '6M': { totalMonths: 6,  intervalDays: 14,  annualDrift: 0.09, endSpreadFraction: 0.10 },
+  '1Y': { totalMonths: 12, intervalDays: 30,  annualDrift: 0.09, endSpreadFraction: 0.17 },
+  '3Y': { totalMonths: 36, intervalDays: 91,  annualDrift: 0.09, endSpreadFraction: 0.30 },
+  '5Y': { totalMonths: 60, intervalDays: 182, annualDrift: 0.09, endSpreadFraction: 0.45 },
+}
+
+const TF_CONF_MAP: Record<Timeframe, number> = {
+  '3M': 84, '6M': 76, '1Y': 67, '3Y': 52, '5Y': 41,
+}
+
+export const TF_LABELS: Record<Timeframe, string> = {
+  '3M': '3 Months', '6M': '6 Months', '1Y': '1 Year', '3Y': '3 Years', '5Y': '5 Years',
+}
+
+function fmtTimeLabel(date: Date, intervalDays: number): string {
+  if (intervalDays <= 14) {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+  if (intervalDays <= 31) {
+    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+  }
+  const q = Math.floor(date.getMonth() / 3) + 1
+  return `Q${q} '${String(date.getFullYear()).slice(2)}`
+}
+
+export function generateLongTermData(basePrice: number, timeframe: Timeframe): LongTermPoint[] {
+  const { totalMonths, intervalDays, annualDrift, endSpreadFraction } = TF_CONFIG[timeframe]
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+
+  const totalDays = totalMonths * 30
+  const intervalMs = intervalDays * 24 * 60 * 60 * 1000
+  const driftPerInterval = annualDrift * (intervalDays / 365)
+  const volPerInterval = 0.016 * Math.sqrt(intervalDays / 5)
+
+  // Build history (walk backwards from basePrice, then reverse)
+  const histDates: Date[] = []
+  let d = new Date(now)
+  while (d.getTime() >= now.getTime() - totalDays * 86400000) {
+    histDates.unshift(new Date(d))
+    d = new Date(d.getTime() - intervalMs)
+  }
+
+  const histPrices: number[] = [basePrice]
+  for (let i = 1; i < histDates.length; i++) {
+    const noise = (Math.random() - 0.5) * 2 * volPerInterval
+    // reverse-drift to simulate history
+    histPrices.unshift(Math.max(histPrices[0] / (1 + driftPerInterval + noise), 0.001))
+  }
+
+  // Build forecast (walk forward from basePrice)
+  const futureDates: Date[] = []
+  d = new Date(now.getTime() + intervalMs)
+  while (d.getTime() <= now.getTime() + totalDays * 86400000) {
+    futureDates.push(new Date(d))
+    d = new Date(d.getTime() + intervalMs)
+  }
+
+  const futurePrices: number[] = [basePrice]
+  for (let i = 1; i <= futureDates.length; i++) {
+    const noise = (Math.random() - 0.47) * 2 * volPerInterval
+    futurePrices.push(Math.max(futurePrices[futurePrices.length - 1] * (1 + driftPerInterval + noise), 0.001))
+  }
+  futurePrices.shift() // remove the seed (current price)
+
+  const totalFuture = futureDates.length
+
+  return [
+    ...histDates.map((date, i) => {
+      const p = histPrices[i]
+      return {
+        time: fmtTimeLabel(date, intervalDays),
+        actual: parseFloat(p.toFixed(2)),
+        forecast: parseFloat(p.toFixed(2)),
+        upper: parseFloat(p.toFixed(2)),
+        lower: parseFloat(p.toFixed(2)),
+      }
+    }),
+    ...futureDates.map((date, i) => {
+      const p = futurePrices[i]
+      const spreadFrac = endSpreadFraction * ((i + 1) / totalFuture)
+      const spread = basePrice * spreadFrac
+      return {
+        time: fmtTimeLabel(date, intervalDays),
+        actual: null,
+        forecast: parseFloat(p.toFixed(2)),
+        upper: parseFloat((p + spread).toFixed(2)),
+        lower: parseFloat(Math.max(p - spread, 0.001).toFixed(2)),
+      }
+    }),
+  ]
+}
+
+export function buildLongTermSummaries(
+  basePrice: number,
+  allData: Record<Timeframe, LongTermPoint[]>
+): LongTermSummary[] {
+  return (['3M', '6M', '1Y', '3Y', '5Y'] as Timeframe[]).map((period) => {
+    const last = allData[period].at(-1)!
+    const returnPct = ((last.forecast - basePrice) / basePrice) * 100
+    return {
+      period,
+      label: TF_LABELS[period],
+      targetPrice: last.forecast,
+      returnPct: parseFloat(returnPct.toFixed(2)),
+      confidence: TF_CONF_MAP[period],
+      signal: returnPct > 3 ? 'BULLISH' : returnPct < -3 ? 'BEARISH' : 'NEUTRAL',
+    }
+  })
+}
+
 // ── Ticker tape data ──────────────────────────────────────────────────────────
 export const tickerItems = [
   ...indices.map(i => ({ symbol: i.symbol, price: i.price, changePct: i.changePct, dir: i.dir })),
