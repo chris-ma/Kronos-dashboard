@@ -2,19 +2,23 @@
 
 import { useState } from 'react'
 import { TrendingUp, TrendingDown, BarChart2 } from 'lucide-react'
-import { indices, crypto, forex, commodities, type MarketItem } from '@/lib/mockData'
+import { indices, crypto, forex, commodities, asx, type MarketItem } from '@/lib/mockData'
 import clsx from 'clsx'
 
-type Tab = 'indices' | 'crypto' | 'forex' | 'commodities'
+type Tab = 'indices' | 'crypto' | 'forex' | 'asx' | 'commodities'
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'indices', label: 'Indices' },
-  { key: 'crypto', label: 'Crypto' },
-  { key: 'forex', label: 'FX' },
+  { key: 'indices',     label: 'Indices' },
+  { key: 'crypto',      label: 'Crypto' },
+  { key: 'forex',       label: 'FX' },
+  { key: 'asx',         label: 'ASX' },
   { key: 'commodities', label: 'Commodities' },
 ]
 
-const DATA: Record<Tab, MarketItem[]> = { indices, crypto, forex, commodities }
+const DATA: Record<Tab, MarketItem[]> = { indices, crypto, forex, asx, commodities }
+
+// Tabs that should be rendered in grouped sections
+const GROUPED_TABS = new Set<Tab>(['asx', 'commodities'])
 
 function MiniSparkline({ dir }: { dir: 'up' | 'down' }) {
   const points = Array.from({ length: 12 }, (_, i) => {
@@ -41,21 +45,32 @@ function MiniSparkline({ dir }: { dir: 'up' | 'down' }) {
   )
 }
 
+function CategoryDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 px-3 pt-2 pb-1">
+      <span className="text-xs font-bold text-kronos-muted uppercase tracking-widest">{label}</span>
+      <div className="flex-1 h-px bg-kronos-border/60" />
+    </div>
+  )
+}
+
 function MarketRow({ item }: { item: MarketItem }) {
   const isUp = item.dir === 'up'
 
   const formatPrice = (p: number) => {
     if (p >= 10000) return p.toLocaleString('en-US', { minimumFractionDigits: 2 })
-    if (p >= 100) return p.toLocaleString('en-US', { minimumFractionDigits: 2 })
-    if (p >= 1) return p.toFixed(4)
+    if (p >= 100)   return p.toLocaleString('en-US', { minimumFractionDigits: 2 })
+    if (p >= 1)     return p.toFixed(4)
     return p.toFixed(5)
   }
 
   return (
     <div className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-kronos-border/30 transition-colors group cursor-pointer">
       <div className="flex items-center gap-3 min-w-0">
-        <div className={clsx('w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
-          isUp ? 'bg-kronos-green/15 text-kronos-green' : 'bg-kronos-red/15 text-kronos-red')}>
+        <div className={clsx(
+          'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
+          isUp ? 'bg-kronos-green/15 text-kronos-green' : 'bg-kronos-red/15 text-kronos-red'
+        )}>
           {isUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
         </div>
         <div className="min-w-0">
@@ -85,6 +100,25 @@ function MarketRow({ item }: { item: MarketItem }) {
   )
 }
 
+function GroupedRows({ items }: { items: MarketItem[] }) {
+  let lastCategory: string | undefined
+
+  return (
+    <>
+      {items.map((item) => {
+        const showDivider = item.category && item.category !== lastCategory
+        lastCategory = item.category
+        return (
+          <div key={item.symbol}>
+            {showDivider && <CategoryDivider label={item.category!} />}
+            <MarketRow item={item} />
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
 function MarketSummaryBar({ items }: { items: MarketItem[] }) {
   const up = items.filter((i) => i.dir === 'up').length
   const down = items.length - up
@@ -108,22 +142,23 @@ function MarketSummaryBar({ items }: { items: MarketItem[] }) {
 export default function MarketOverview() {
   const [tab, setTab] = useState<Tab>('indices')
   const items = DATA[tab]
+  const grouped = GROUPED_TABS.has(tab)
 
   return (
     <div className="card flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-kronos-border">
-        <div>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-kronos-border gap-2">
+        <div className="shrink-0">
           <h2 className="text-sm font-bold text-kronos-text">Market Overview</h2>
           <p className="text-xs text-kronos-muted mt-0.5">Live premarket data</p>
         </div>
-        <div className="flex items-center gap-1 p-0.5 bg-kronos-bg rounded-lg">
+        <div className="flex items-center gap-0.5 p-0.5 bg-kronos-bg rounded-lg overflow-x-auto">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={clsx(
-                'px-2.5 py-1 text-xs rounded-md transition-all font-medium',
+                'px-2 py-1 text-xs rounded-md transition-all font-medium whitespace-nowrap shrink-0',
                 tab === t.key
                   ? 'bg-kronos-accent text-white shadow-sm'
                   : 'text-kronos-muted hover:text-kronos-text'
@@ -137,9 +172,10 @@ export default function MarketOverview() {
 
       {/* Rows */}
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5 animate-fade-in">
-        {items.map((item) => (
-          <MarketRow key={item.symbol} item={item} />
-        ))}
+        {grouped
+          ? <GroupedRows items={items} />
+          : items.map((item) => <MarketRow key={item.symbol} item={item} />)
+        }
       </div>
 
       {/* Summary */}

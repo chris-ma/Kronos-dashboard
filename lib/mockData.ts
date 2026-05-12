@@ -10,6 +10,7 @@ export interface MarketItem {
   changePct: number
   dir: ChangeDir
   volume?: string
+  category?: string
 }
 
 export interface ForecastPoint {
@@ -77,13 +78,67 @@ export const forex: MarketItem[] = [
   { symbol: 'AUD/USD', name: 'Aussie / Dollar', price: 0.6521, change: 0.0018, changePct: 0.28, dir: 'up' },
 ]
 
-// ── Commodities ───────────────────────────────────────────────────────────────
+// ── Commodities (all categories) ─────────────────────────────────────────────
 export const commodities: MarketItem[] = [
-  { symbol: 'GOLD', name: 'Gold Spot', price: 2338.40, change: 14.20, changePct: 0.61, dir: 'up' },
-  { symbol: 'OIL (WTI)', name: 'Crude Oil WTI', price: 82.47, change: -0.93, changePct: -1.12, dir: 'down' },
-  { symbol: 'SILVER', name: 'Silver Spot', price: 27.83, change: 0.34, changePct: 1.24, dir: 'up' },
-  { symbol: 'NAT GAS', name: 'Natural Gas', price: 1.874, change: -0.032, changePct: -1.68, dir: 'down' },
+  // Precious Metals
+  { symbol: 'GOLD',      name: 'Gold Spot',       price: 2338.40,  change:  14.20,   changePct:  0.61,  dir: 'up',   category: 'Precious Metals' },
+  { symbol: 'SILVER',    name: 'Silver Spot',      price:   27.83,  change:   0.34,   changePct:  1.24,  dir: 'up',   category: 'Precious Metals' },
+  { symbol: 'PLATINUM',  name: 'Platinum Spot',    price:  985.20,  change:  -8.40,   changePct: -0.85,  dir: 'down', category: 'Precious Metals' },
+  { symbol: 'PALLADIUM', name: 'Palladium Spot',   price: 1024.50,  change:  12.30,   changePct:  1.22,  dir: 'up',   category: 'Precious Metals' },
+  // Base Metals
+  { symbol: 'COPPER',    name: 'Copper ($/lb)',     price:    4.523, change:   0.042,  changePct:  0.94,  dir: 'up',   category: 'Base Metals' },
+  { symbol: 'ALUMINUM',  name: 'Aluminum ($/t)',    price: 2534.00,  change: -18.50,   changePct: -0.72,  dir: 'down', category: 'Base Metals' },
+  { symbol: 'ZINC',      name: 'Zinc ($/t)',        price: 2876.00,  change:  34.00,   changePct:  1.20,  dir: 'up',   category: 'Base Metals' },
+  { symbol: 'NICKEL',    name: 'Nickel ($/t)',      price: 18240.00, change: -210.00,  changePct: -1.14,  dir: 'down', category: 'Base Metals' },
+  { symbol: 'LEAD',      name: 'Lead ($/t)',        price: 2156.00,  change:  11.00,   changePct:  0.51,  dir: 'up',   category: 'Base Metals' },
+  { symbol: 'TIN',       name: 'Tin ($/t)',         price: 31450.00, change: 280.00,   changePct:  0.90,  dir: 'up',   category: 'Base Metals' },
+  // Energy
+  { symbol: 'WTI',       name: 'Crude Oil WTI',    price:   82.47,  change:  -0.93,   changePct: -1.12,  dir: 'down', category: 'Energy' },
+  { symbol: 'BRENT',     name: 'Brent Crude',       price:   86.23,  change:  -0.71,   changePct: -0.82,  dir: 'down', category: 'Energy' },
+  { symbol: 'NAT GAS',   name: 'Natural Gas',       price:    1.874, change:  -0.032,  changePct: -1.68,  dir: 'down', category: 'Energy' },
+  { symbol: 'HEAT OIL',  name: 'Heating Oil',       price:    2.634, change:   0.018,  changePct:  0.69,  dir: 'up',   category: 'Energy' },
+  { symbol: 'GASOLINE',  name: 'RBOB Gasoline',     price:    2.743, change:  -0.024,  changePct: -0.87,  dir: 'down', category: 'Energy' },
+  { symbol: 'COAL',      name: 'Newcastle Coal',    price:  134.50,  change:   1.85,   changePct:  1.39,  dir: 'up',   category: 'Energy' },
+  // Agriculture
+  { symbol: 'CORN',      name: 'Corn (¢/bu)',       price:  454.25,  change:  -3.75,   changePct: -0.82,  dir: 'down', category: 'Agriculture' },
+  { symbol: 'WHEAT',     name: 'Wheat (¢/bu)',      price:  567.75,  change:   8.25,   changePct:  1.47,  dir: 'up',   category: 'Agriculture' },
+  { symbol: 'SOYBEANS',  name: 'Soybeans (¢/bu)',   price: 1143.25,  change: -11.50,   changePct: -1.00,  dir: 'down', category: 'Agriculture' },
+  { symbol: 'COFFEE',    name: 'Coffee C (¢/lb)',   price:  223.45,  change:   4.20,   changePct:  1.92,  dir: 'up',   category: 'Agriculture' },
+  { symbol: 'SUGAR',     name: 'Sugar #11 (¢/lb)',  price:   19.24,  change:  -0.38,   changePct: -1.94,  dir: 'down', category: 'Agriculture' },
+  { symbol: 'COTTON',    name: 'Cotton (¢/lb)',     price:   82.34,  change:   0.67,   changePct:  0.82,  dir: 'up',   category: 'Agriculture' },
+  { symbol: 'COCOA',     name: 'Cocoa ($/t)',       price: 8234.00,  change: 124.00,   changePct:  1.53,  dir: 'up',   category: 'Agriculture' },
+  // Livestock
+  { symbol: 'CATTLE',    name: 'Live Cattle (¢/lb)',price:  181.42,  change:   0.87,   changePct:  0.48,  dir: 'up',   category: 'Livestock' },
+  { symbol: 'HOGS',      name: 'Lean Hogs (¢/lb)', price:   92.34,  change:  -1.24,   changePct: -1.33,  dir: 'down', category: 'Livestock' },
 ]
+
+// ── ASX (Australia) ───────────────────────────────────────────────────────────
+export const asxIndices: MarketItem[] = [
+  { symbol: 'XJO',  name: 'S&P/ASX 200',         price: 7823.40, change:  42.30, changePct:  0.54, dir: 'up',   volume: '—',     category: 'Indices' },
+  { symbol: 'XAO',  name: 'All Ordinaries',        price: 8034.20, change:  38.70, changePct:  0.48, dir: 'up',   volume: '—',     category: 'Indices' },
+  { symbol: 'XFL',  name: 'S&P/ASX 50',           price: 7234.80, change: -21.40, changePct: -0.29, dir: 'down', volume: '—',     category: 'Indices' },
+  { symbol: 'XSO',  name: 'ASX Small Ords',        price: 3124.50, change:  14.80, changePct:  0.48, dir: 'up',   volume: '—',     category: 'Indices' },
+]
+
+export const asxStocks: MarketItem[] = [
+  { symbol: 'BHP',  name: 'BHP Group',            price:  45.12, change:  0.63,  changePct:  1.42, dir: 'up',   volume: '28.4M', category: 'Mining' },
+  { symbol: 'RIO',  name: 'Rio Tinto',             price: 118.23, change: -1.87,  changePct: -1.56, dir: 'down', volume: '4.1M',  category: 'Mining' },
+  { symbol: 'FMG',  name: 'Fortescue',             price:  22.87, change:  0.44,  changePct:  1.96, dir: 'up',   volume: '18.7M', category: 'Mining' },
+  { symbol: 'CBA',  name: 'Commonwealth Bank',     price: 122.45, change:  1.23,  changePct:  1.01, dir: 'up',   volume: '3.8M',  category: 'Financials' },
+  { symbol: 'NAB',  name: 'National Aust. Bank',   price:  34.78, change: -0.42,  changePct: -1.19, dir: 'down', volume: '9.2M',  category: 'Financials' },
+  { symbol: 'WBC',  name: 'Westpac Banking',       price:  26.92, change:  0.18,  changePct:  0.67, dir: 'up',   volume: '11.3M', category: 'Financials' },
+  { symbol: 'ANZ',  name: 'ANZ Group',             price:  28.54, change: -0.31,  changePct: -1.08, dir: 'down', volume: '8.6M',  category: 'Financials' },
+  { symbol: 'MQG',  name: 'Macquarie Group',       price: 189.34, change:  2.87,  changePct:  1.54, dir: 'up',   volume: '1.4M',  category: 'Financials' },
+  { symbol: 'CSL',  name: 'CSL Limited',           price: 287.30, change:  3.45,  changePct:  1.22, dir: 'up',   volume: '1.1M',  category: 'Healthcare' },
+  { symbol: 'WES',  name: 'Wesfarmers',            price:  67.45, change: -0.54,  changePct: -0.79, dir: 'down', volume: '2.9M',  category: 'Consumer' },
+  { symbol: 'WOW',  name: 'Woolworths Group',      price:  33.45, change:  0.23,  changePct:  0.69, dir: 'up',   volume: '4.7M',  category: 'Consumer' },
+  { symbol: 'TLS',  name: 'Telstra Group',         price:   4.21, change: -0.04,  changePct: -0.94, dir: 'down', volume: '22.8M', category: 'Telecom' },
+  { symbol: 'GMG',  name: 'Goodman Group',         price:  32.15, change:  0.48,  changePct:  1.51, dir: 'up',   volume: '3.2M',  category: 'Property' },
+  { symbol: 'TCL',  name: 'Transurban Group',      price:  13.24, change: -0.12,  changePct: -0.90, dir: 'down', volume: '5.8M',  category: 'Infrastructure' },
+  { symbol: 'REA',  name: 'REA Group',             price: 195.60, change:  4.20,  changePct:  2.19, dir: 'up',   volume: '0.6M',  category: 'Technology' },
+]
+
+export const asx: MarketItem[] = [...asxIndices, ...asxStocks]
 
 // ── Kronos Forecast ───────────────────────────────────────────────────────────
 export function generateForecastData(basePrice: number, points = 48): ForecastPoint[] {
@@ -346,7 +401,8 @@ export function buildLongTermSummaries(
 // ── Ticker tape data ──────────────────────────────────────────────────────────
 export const tickerItems = [
   ...indices.map(i => ({ symbol: i.symbol, price: i.price, changePct: i.changePct, dir: i.dir })),
+  ...asxIndices.slice(0, 2).map(i => ({ symbol: i.symbol, price: i.price, changePct: i.changePct, dir: i.dir })),
   ...crypto.slice(0, 3).map(i => ({ symbol: i.symbol, price: i.price, changePct: i.changePct, dir: i.dir })),
   ...forex.slice(0, 3).map(i => ({ symbol: i.symbol, price: i.price, changePct: i.changePct, dir: i.dir })),
-  ...commodities.slice(0, 2).map(i => ({ symbol: i.symbol, price: i.price, changePct: i.changePct, dir: i.dir })),
+  ...commodities.filter(c => ['GOLD', 'WTI', 'COPPER', 'BRENT'].includes(c.symbol)).map(i => ({ symbol: i.symbol, price: i.price, changePct: i.changePct, dir: i.dir })),
 ]
